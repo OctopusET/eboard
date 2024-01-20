@@ -175,8 +175,8 @@ SeekGraph2::SeekGraph2() {
   gc = NULL;
   pix = NULL;
   lw=lh=mx=my=-1;
-  gtk_widget_set_events(widget,GDK_EXPOSURE_MASK|GDK_BUTTON_PRESS_MASK|
-			GDK_POINTER_MOTION_MASK);
+  gtk_widget_set_events(widget,GDK_KEY_EXPOSURE_MASK|GDK_KEY_BUTTON_PRESS_MASK|
+			GDK_KEY_POINTER_MOTION_MASK);
 
   gtk_signal_connect (GTK_OBJECT (widget), "expose_event",
                       (GtkSignalFunc) skg2_expose, (gpointer) this);

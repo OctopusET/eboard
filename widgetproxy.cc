@@ -382,7 +382,7 @@ TextPreview::TextPreview(GdkWindow *wnd, ColorButton *_bg) {
   pixmap=gdk_pixmap_new(wnd, 400, 300, -1);
 
   widget=gtk_drawing_area_new();
-  gtk_widget_set_events(widget,GDK_EXPOSURE_MASK);
+  gtk_widget_set_events(widget,GDK_KEY_EXPOSURE_MASK);
   gtk_drawing_area_size(GTK_DRAWING_AREA(widget),400,300);
   gtk_signal_connect(GTK_OBJECT(widget),"expose_event",
 		     GTK_SIGNAL_FUNC(preview_expose),(gpointer)this);

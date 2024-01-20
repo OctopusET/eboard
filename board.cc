@@ -93,9 +93,9 @@ Board::Board() : WidgetProxy() {
   flipped=false;
 
   widget=yidget=gtk_drawing_area_new();
-  gtk_widget_set_events(yidget,GDK_EXPOSURE_MASK|GDK_BUTTON_PRESS_MASK|
-			GDK_BUTTON_RELEASE_MASK|GDK_BUTTON1_MOTION_MASK|
-			GDK_POINTER_MOTION_HINT_MASK);
+  gtk_widget_set_events(yidget,GDK_KEY_EXPOSURE_MASK|GDK_KEY_BUTTON_PRESS_MASK|
+			GDK_KEY_BUTTON_RELEASE_MASK|GDK_KEY_BUTTON1_MOTION_MASK|
+			GDK_KEY_POINTER_MOTION_HINT_MASK);
 
   sqside=59;
   sqw = 2*borx + 8*sqside + 1;
@@ -1493,7 +1493,7 @@ gboolean board_configure_event(GtkWidget *widget,GdkEventConfigure *ce,
   // copy scrap to pixmap buffer
   gdk_draw_rgb_image(me->buffer,widget->style->black_gc,0,0,
 		     me->sqw, me->sqh,
-		     GDK_RGB_DITHER_NORMAL,me->scrap,me->sqw*3);
+		     GDK_KEY_RGB_DITHER_NORMAL,me->scrap,me->sqw*3);
 
   if (global.ShowCoordinates) {
     if (!me->wgc)
@@ -1584,14 +1584,14 @@ gboolean board_motion_event(GtkWidget *widget,
   int bw,bh;
 
   if (em!=NULL) {
-    if (!GDK_IS_WINDOW(em->window))
+    if (!GDK_KEY_IS_WINDOW(em->window))
       return TRUE;
     memcpy(&LastMotionEvent,em,sizeof(GdkEventMotion));
   }
 
   me=(Board *)data;
 
-  if ((!me->dr_fto)||(!me->dr_active)||(em==NULL)||(!(em->state & GDK_BUTTON1_MASK)))
+  if ((!me->dr_fto)||(!me->dr_active)||(em==NULL)||(!(em->state & GDK_KEY_BUTTON1_MASK)))
     return TRUE;
 
   sq=he=me->sqside;
@@ -1679,7 +1679,7 @@ gboolean board_motion_event(GtkWidget *widget,
 			 me->borx + me->dr_c * sq, 
 			 me->morey + me->bory + me->dr_r * sq,
 			 sq, sq,
-			 GDK_RGB_DITHER_NORMAL, me->M[0].data ,3 * sq);
+			 GDK_KEY_RGB_DITHER_NORMAL, me->M[0].data ,3 * sq);
 
       // erase upper portion of extruded piece
       if (me->cur->extruded) {
@@ -1696,7 +1696,7 @@ gboolean board_motion_event(GtkWidget *widget,
 			     me->borx + me->dr_c * sq, 
 			     me->morey + me->bory + (me->dr_r - 1) * sq,
 			     sq, sq,
-			     GDK_RGB_DITHER_NORMAL,me->M[0].data,3 * sq);
+			     GDK_KEY_RGB_DITHER_NORMAL,me->M[0].data,3 * sq);
 	} else { // there is nothing above it, just paint it black
 	  gdk_draw_rectangle(GCPbuffer,widget->style->black_gc,TRUE,
 			     me->borx + me->dr_c * sq,
@@ -1719,17 +1719,17 @@ gboolean board_motion_event(GtkWidget *widget,
     y=(int)(em->y);
 
     if (em->window != NULL) {
-      if (GDK_IS_WINDOW(em->window))
+      if (GDK_KEY_IS_WINDOW(em->window))
 	gdk_window_get_pointer(em->window, &x, &y, &state);
       else
-	cout << "[ case 1: em->window is NOT a GDK_WINDOW ]\n";
+	cout << "[ case 1: em->window is NOT a GDK_KEY_WINDOW ]\n";
     } else {
       if (me->widget->window==NULL) {
 	cout << "[ case 3: both window pointers are NULL ]\n";
-      } else if (GDK_IS_WINDOW(me->widget->window))
+      } else if (GDK_KEY_IS_WINDOW(me->widget->window))
 	gdk_window_get_pointer(me->widget->window, &x, &y, &state);
       else
-	cout << "[ case 2: me->widget->window is NOT a GDK_WINDOW ]\n";
+	cout << "[ case 2: me->widget->window is NOT a GDK_KEY_WINDOW ]\n";
       cout << "[ And this is where it used to print a warning ]\n"; // FIXME
     }
 

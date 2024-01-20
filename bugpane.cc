@@ -38,7 +38,7 @@ BareBoard::BareBoard() : WidgetProxy() {
   Names[1]=_("None");
   
   widget=gtk_drawing_area_new();
-  gtk_widget_set_events(widget,GDK_EXPOSURE_MASK);
+  gtk_widget_set_events(widget,GDK_KEY_EXPOSURE_MASK);
   gtk_signal_connect(GTK_OBJECT(widget),"expose_event",
 		     GTK_SIGNAL_FUNC(bareboard_expose),(gpointer)this);
   
@@ -201,7 +201,7 @@ gboolean bareboard_expose(GtkWidget *widget,GdkEventExpose *ee,
       me->pset->endQueueing();
 
       gdk_draw_rgb_image(me->pixbuf, gc, 0, 0, rowsz, rowsz+y,
-			 GDK_RGB_DITHER_NORMAL, tmp, rowsz*3);
+			 GDK_KEY_RGB_DITHER_NORMAL, tmp, rowsz*3);
 
       g_free(tmp);
 

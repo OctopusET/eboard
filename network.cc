@@ -154,7 +154,7 @@ void NetConnection::notifyReadReady(IONotificationInterface *target) {
   listener = NULL;
   if (target != NULL) {
     listener = target;
-    TagRead = gdk_input_add(getReadHandle(), GDK_INPUT_READ, 
+    TagRead = gdk_input_add(getReadHandle(), GDK_KEY_INPUT_READ, 
 			    (GdkInputFunction) netconn_read_notify,
 			    (gpointer) this );
   }

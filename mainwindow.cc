@@ -159,7 +159,7 @@ MainWindow::MainWindow() {
     nav_enable[i]=true;
 
   widget=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_widget_set_events(widget,GDK_KEY_PRESS_MASK);
+  gtk_widget_set_events(widget,GDK_KEY_KEY_PRESS_MASK);
   setTitle("eboard");
   gtk_widget_realize(widget);
   gtk_window_resize(GTK_WINDOW(widget),800,600);
@@ -291,7 +291,7 @@ MainWindow::MainWindow() {
   gtk_container_add(GTK_CONTAINER(tw[0]),tw[1]);
   gtk_container_set_border_width(GTK_CONTAINER(tw[1]),4);
   inputbox=gtk_entry_new();
-  gtk_widget_set_events(inputbox,(GdkEventMask)(gtk_widget_get_events(inputbox)|GDK_FOCUS_CHANGE_MASK));
+  gtk_widget_set_events(inputbox,(GdkEventMask)(gtk_widget_get_events(inputbox)|GDK_KEY_FOCUS_CHANGE_MASK));
 
   gtk_signal_connect(GTK_OBJECT(inputbox),"focus_out_event",
 		     GTK_SIGNAL_FUNC(mainwindow_input_focus_out),NULL);
@@ -1366,24 +1366,24 @@ main_key_press (GtkWidget * wid, GdkEventKey * evt, gpointer data) {
   int cpage;
   ptr=(MainWindow *)data;
 
-  if (evt->state&GDK_CONTROL_MASK) {
+  if (evt->state&GDK_KEY_CONTROL_MASK) {
     switch(evt->keyval) {
-    case GDK_Left:
+    case GDK_KEY_Left:
       ptr->gameWalk(1);
       break;
-    case GDK_Right:
+    case GDK_KEY_Right:
       ptr->gameWalk(2);
       break;
-    case GDK_F:
-    case GDK_f:
+    case GDK_KEY_F:
+    case GDK_KEY_f:
       windows_find(0,0);
       break;
-    case GDK_G:
-    case GDK_g:
+    case GDK_KEY_G:
+    case GDK_KEY_g:
       windows_findp(0,0);
       break;
-    case GDK_T:
-    case GDK_t:
+    case GDK_KEY_T:
+    case GDK_KEY_t:
       global.ShowTimestamp = (global.ShowTimestamp ? 0 : 1);
       global.output->updateFont();
       global.updateFont();
@@ -1396,31 +1396,31 @@ main_key_press (GtkWidget * wid, GdkEventKey * evt, gpointer data) {
   }
 
   switch(evt->keyval) {
-  case GDK_Escape:
+  case GDK_KEY_Escape:
     if (ptr->ims)
       ptr->ims->flip();
     break;
-  case GDK_F3: // previous pane
+  case GDK_KEY_F3: // previous pane
     global.ebook->goToPrevious();
     break;
-  case GDK_F4: // next pane
+  case GDK_KEY_F4: // next pane
     global.ebook->goToNext();
     break;
-  case GDK_F5: // pop main board
+  case GDK_KEY_F5: // pop main board
     global.ebook->goToPageId(-1);
     break;
-  case GDK_F6: // pop console
+  case GDK_KEY_F6: // pop console
     global.ebook->goToPageId(-2);
     break;
-  case GDK_F7: // pop seek graph
+  case GDK_KEY_F7: // pop seek graph
     global.ebook->goToPageId(-3);
     break;
-  case GDK_F8: // toggle shortcut bar
+  case GDK_KEY_F8: // toggle shortcut bar
     global.ShowQuickbar = ! (global.ShowQuickbar);    
     global.qbcontainer->update();
     global.writeRC();
     break;
-  case GDK_Page_Up:
+  case GDK_KEY_Page_Up:
     if (wid != 0) {
       cpage = global.ebook->getCurrentPageId();
       if (cpage==-2)
@@ -1430,7 +1430,7 @@ main_key_press (GtkWidget * wid, GdkEventKey * evt, gpointer data) {
       ptr->xconsole->pageUp();
     }
     break;
-  case GDK_Page_Down:
+  case GDK_KEY_Page_Down:
     if (wid != 0) {
       cpage = global.ebook->getCurrentPageId();
       if (cpage==-2)
@@ -1452,17 +1452,17 @@ input_key_press (GtkWidget * wid, GdkEventKey * evt, gpointer data) {
   ptr=(MainWindow *)data;
 
   switch(evt->keyval) {
-  case GDK_Up:
+  case GDK_KEY_Up:
     gtk_signal_emit_stop_by_name(GTK_OBJECT(wid), "key_press_event");
     ptr->historyUp();
     return 1;
-  case GDK_Down:
+  case GDK_KEY_Down:
     gtk_signal_emit_stop_by_name(GTK_OBJECT(wid), "key_press_event");
     ptr->historyDown();
     return 1;
-  case GDK_KP_Enter:
+  case GDK_KEY_KP_Enter:
     gtk_signal_emit_stop_by_name(GTK_OBJECT(wid), "key_press_event");
-  case GDK_Return:
+  case GDK_KEY_Return:
     ptr->injectInput();
     return 1;
   }

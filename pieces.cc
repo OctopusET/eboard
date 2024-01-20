@@ -378,7 +378,7 @@ void PieceSet::drawPiece(piece p, GdkPixmap *dest, GdkGC *gc,
 	  S=0;
 	  // commit pixel strip
 	  gdk_draw_rgb_image(dest,gc,x+k,y+i,bufcount,1,
-			     GDK_RGB_DITHER_NORMAL,
+			     GDK_KEY_RGB_DITHER_NORMAL,
 			     buf,
 			     side * 3);
 	} else {
@@ -400,7 +400,7 @@ void PieceSet::drawPiece(piece p, GdkPixmap *dest, GdkGC *gc,
 
     if (S==1)
       gdk_draw_rgb_image(dest,gc,x+k,y+i,bufcount,1,
-			 GDK_RGB_DITHER_NORMAL,
+			 GDK_KEY_RGB_DITHER_NORMAL,
 			 buf,
 			 side * 3);
 
@@ -466,13 +466,13 @@ void PieceSet::drawOutlinedPiece(piece p,GdkPixmap *dest,GdkGC *gc,
 	  S=0;
 	  // border
 	  gdk_draw_rgb_image(dest,gc,x+k-1,y+i,bufcount+2,1,
-			     GDK_RGB_DITHER_NORMAL,
+			     GDK_KEY_RGB_DITHER_NORMAL,
 			     outline,
 			     side * 3);	  
 
 	  // commit pixel strip
 	  gdk_draw_rgb_image(dest,gc,x+k,y+i,bufcount,1,
-			     GDK_RGB_DITHER_NORMAL,
+			     GDK_KEY_RGB_DITHER_NORMAL,
 			     buf,
 			     side * 3);
 	} else {
@@ -494,11 +494,11 @@ void PieceSet::drawOutlinedPiece(piece p,GdkPixmap *dest,GdkGC *gc,
 
     if (S==1) {
       gdk_draw_rgb_image(dest,gc,x+k-1,y+i,bufcount+2,1,
-			 GDK_RGB_DITHER_NORMAL,
+			 GDK_KEY_RGB_DITHER_NORMAL,
 			 outline,
 			 side * 3);	  
       gdk_draw_rgb_image(dest,gc,x+k,y+i,bufcount,1,
-			 GDK_RGB_DITHER_NORMAL,
+			 GDK_KEY_RGB_DITHER_NORMAL,
 			 buf,
 			 side * 3);
     }
@@ -827,7 +827,7 @@ void VectorPieces::drawPiece(GdkPixmap *dest,GdkGC *gc,int sqside,
   /*
   gdk_gc_get_values(gc,&gcval);
   gdk_gc_set_line_attributes(gc,2,gcval.line_style,
-			     GDK_CAP_ROUND,GDK_JOIN_ROUND);
+			     GDK_KEY_CAP_ROUND,GDK_KEY_JOIN_ROUND);
   */
   gdk_rgb_gc_set_foreground(gc,(pc==WHITE)?0xffffff:0);
   gdk_draw_polygon(dest,gc,TRUE,&vec[offset[v]],np[v]);

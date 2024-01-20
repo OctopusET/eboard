@@ -169,8 +169,8 @@ void NText::createGui() {
   widget = gtk_hbox_new(FALSE,0);
   body   = gtk_drawing_area_new();
 
-  gtk_widget_set_events(body,GDK_EXPOSURE_MASK|GDK_BUTTON_PRESS_MASK|
-			GDK_BUTTON_RELEASE_MASK|GDK_BUTTON1_MOTION_MASK|GDK_SCROLL_MASK);
+  gtk_widget_set_events(body,GDK_KEY_EXPOSURE_MASK|GDK_KEY_BUTTON_PRESS_MASK|
+			GDK_KEY_BUTTON_RELEASE_MASK|GDK_KEY_BUTTON1_MOTION_MASK|GDK_KEY_SCROLL_MASK);
 
   canvas = 0;
   cgc    = 0;
@@ -202,8 +202,8 @@ void NText::createGui() {
                       GTK_SIGNAL_FUNC (ntext_ksel), (gpointer) this);
 
   gtk_selection_add_target(body,
-			   GDK_SELECTION_PRIMARY,
-			   GDK_SELECTION_TYPE_STRING, 1);
+			   GDK_KEY_SELECTION_PRIMARY,
+			   GDK_KEY_SELECTION_TYPE_STRING, 1);
 
   gtk_signal_connect (GTK_OBJECT(body), "selection_get",
                       GTK_SIGNAL_FUNC (ntext_getsel), (gpointer) this);
@@ -484,7 +484,7 @@ void NText::discardLines(int n) {
 
     if (A.LineNum < 0 || B.LineNum < 0) {
       havesel = false;
-      gtk_selection_owner_set(NULL,GDK_SELECTION_PRIMARY,time(0));
+      gtk_selection_owner_set(NULL,GDK_KEY_SELECTION_PRIMARY,time(0));
     }
   }
 
@@ -590,7 +590,7 @@ void NText::selectRegion(int startline, int startoff, int endline, int endoff) {
   if (body != NULL) {
     if (!GTK_WIDGET_REALIZED(body))
       gtk_widget_realize(body);
-    gtk_selection_owner_set(body, GDK_SELECTION_PRIMARY,time(0));
+    gtk_selection_owner_set(body, GDK_KEY_SELECTION_PRIMARY,time(0));
   }
   scheduleRepaint();
 }
@@ -869,8 +869,8 @@ bool NText::calcTP(TPoint &t, int x,int y) {
 /* scroll wheel for GTK 2 */
 gboolean ntext_scroll(GtkWidget *widget, GdkEventScroll *es, gpointer data) {
   NText *me = (NText *) data;
-  if (es->direction == GDK_SCROLL_UP) me->lineUp(1);
-  if (es->direction == GDK_SCROLL_DOWN) me->lineDown(1);  
+  if (es->direction == GDK_KEY_SCROLL_UP) me->lineUp(1);
+  if (es->direction == GDK_KEY_SCROLL_DOWN) me->lineDown(1);  
   return TRUE;
 }
 
@@ -890,7 +890,7 @@ gboolean ntext_mdown(GtkWidget *widget, GdkEventButton *eb,
   if (eb->button == 1) {
 
     switch(eb->type) {
-    case GDK_2BUTTON_PRESS: // select word
+    case GDK_KEY_2BUTTON_PRESS: // select word
       if (me->calcTP(c, (int)(eb->x), (int)(eb->y))) {
 	tl = me->lines[c.LineNum]->Text;
 	if (isspace(tl[c.ByteOffset]))
@@ -918,11 +918,11 @@ gboolean ntext_mdown(GtkWidget *widget, GdkEventButton *eb,
 	me->B.ByteOffset = r - tl;
 	me->havesel = true;
 	me->dropmup++;
-	gtk_selection_owner_set(me->body, GDK_SELECTION_PRIMARY,eb->time);
+	gtk_selection_owner_set(me->body, GDK_KEY_SELECTION_PRIMARY,eb->time);
 	me->scheduleRepaint();
       }
       break;
-    case GDK_3BUTTON_PRESS: // select whole line
+    case GDK_KEY_3BUTTON_PRESS: // select whole line
       if (me->calcTP(c, (int)(eb->x), (int)(eb->y))) {
 	me->havesel = true;
 	me->A = c;
@@ -930,7 +930,7 @@ gboolean ntext_mdown(GtkWidget *widget, GdkEventButton *eb,
 	me->A.ByteOffset = 0;
 	me->B.ByteOffset = me->lines[c.LineNum]->NBytes - 1;
 	me->dropmup++;
-	gtk_selection_owner_set(me->body, GDK_SELECTION_PRIMARY,eb->time);
+	gtk_selection_owner_set(me->body, GDK_KEY_SELECTION_PRIMARY,eb->time);
 	me->scheduleRepaint();
       }      
       break;
@@ -938,7 +938,7 @@ gboolean ntext_mdown(GtkWidget *widget, GdkEventButton *eb,
       me->havesel = me->calcTP(me->A, (int)(eb->x), (int)(eb->y));
       if (me->havesel) {
 	me->B = me->A;
-	gtk_selection_owner_set(me->body, GDK_SELECTION_PRIMARY,eb->time);
+	gtk_selection_owner_set(me->body, GDK_KEY_SELECTION_PRIMARY,eb->time);
       }
     }
   }
@@ -975,7 +975,7 @@ gboolean ntext_mup(GtkWidget *widget, GdkEventButton *eb,
     if (dirty)
       me->repaint();
     if (me->havesel)
-      gtk_selection_owner_set(me->body, GDK_SELECTION_PRIMARY,eb->time);
+      gtk_selection_owner_set(me->body, GDK_KEY_SELECTION_PRIMARY,eb->time);
   }
   return TRUE;
 }
@@ -994,7 +994,7 @@ gboolean ntext_mdrag(GtkWidget *widget, GdkEventMotion *em,
   if (!em) return FALSE;
 
   if (!me->havesel) return FALSE;
-  if (em->state & GDK_BUTTON1_MASK) {
+  if (em->state & GDK_KEY_BUTTON1_MASK) {
 
     x = (int)(em->x);
     y = (int)(em->y);
