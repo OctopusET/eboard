@@ -647,13 +647,6 @@ for(@x) {
 }
 push @ldflags, @libs;
 
-if (!header_check("gtk/gtk.h","gdk/gdkkeysyms.h"))
-{
-    print "** The compiler did not find GTK/GDK headers,\n";
-    print "** unable to proceed.\n";
-    exit 2;
-}
-
 # dgtnix library
 
 #if ($dgt!=0) {

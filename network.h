@@ -48,8 +48,6 @@
 
 #include <arpa/inet.h>
 
-#include <gtk/gtk.h>
-
 #include "stl.h"
 #include "eboard.h"
 

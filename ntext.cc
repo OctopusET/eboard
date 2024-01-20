@@ -28,7 +28,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#include <gtk/gtk.h>
 #include <gtk/gtkselection.h>
 #include "ntext.h"
 #include "global.h"

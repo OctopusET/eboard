@@ -25,7 +25,6 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H 1
 
-#include <gtk/gtk.h>
 #include "eboard.h"
 #include "text.h"
 #include "network.h"

@@ -26,7 +26,6 @@
 #define EBOARD_XBOARD_H
 
 #include "stl.h"
-#include <gtk/gtk.h>
 #include "widgetproxy.h"
 #include "clock.h"
 

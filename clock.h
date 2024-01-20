@@ -27,7 +27,6 @@
 
 #include <sys/time.h>
 #include <unistd.h>
-#include <gtk/gtk.h>
 #include <time.h>
 
 #include "stl.h"

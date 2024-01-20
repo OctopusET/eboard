@@ -27,7 +27,6 @@
 #ifndef PROTO_FICS_H
 #define PROTO_FICS_H 1
 
-#include <gtk/gtk.h>
 #include "stl.h"
 #include "position.h"
 

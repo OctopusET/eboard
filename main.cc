@@ -25,7 +25,6 @@
 
 #include <iostream>
 #include <stdlib.h>
-#include <gtk/gtk.h>
 #include <gst/gst.h>
 #include <sys/types.h>
 #include <signal.h>

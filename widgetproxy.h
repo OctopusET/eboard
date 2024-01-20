@@ -25,7 +25,6 @@
 #ifndef WIDGET_PROXY_H
 #define WIDGET_PROXY_H
 
-#include <gtk/gtk.h>
 #include "eboard.h"
 #include "stl.h"
 

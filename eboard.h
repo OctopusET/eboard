@@ -26,7 +26,6 @@
 #define EBOARD_H 1
 
 #include <iostream>
-#include <gtk/gtk.h>
 #include "config.h"
 
 #define EMPTY 0x00
