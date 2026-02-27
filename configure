@@ -17,6 +17,7 @@ my $nls         = 1;
 my $dataprefix  = '';
 my $manprefix   = '';
 my $osname      = '';
+my $alsa        = 0;
 #my $dgt         = 1;
 
 # ------------
@@ -46,6 +47,7 @@ sub usage {
     print "configure options:\n";
     print "\t--prefix=path        install to given prefix instead of /usr/local\n";
     print "\t--disable-nls        disable translation support\n";
+    print "\t--with-alsa          enable direct ALSA sound support\n";
 #    print "\t--disable-dgt        disable DGT board support\n";
     print "\t--compiler=prog      use alternative compiler (default: g++)\n";
     print "\t--extra-inc=list     additional include file search paths, separated by :\n";
@@ -434,6 +436,10 @@ for (@ARGV) {
 	$nls = 0;
 	next;
     }
+    if ($_ eq '--with-alsa') {
+	$alsa = 1;
+	next;
+    }
 #    if ($_ eq '--disable-dgt') {
 #	$dgt = 0;
 #	next;
@@ -654,6 +660,41 @@ if (!header_check("gtk/gtk.h","gdk/gdkkeysyms.h"))
     exit 2;
 }
 
+# ALSA support
+
+if ($alsa != 0) {
+    print "looking for ALSA... ";
+    $alsaversion = `$pkgconfig --modversion alsa 2>/dev/null`;
+    chomp($alsaversion);
+
+    if ($alsaversion ne '') {
+	print "$alsaversion, ok\n";
+
+	$x = `$pkgconfig --cflags alsa`;
+	chomp($x);
+	@x = split(/ /,$x);
+	for(@x) {
+	    push @cxxflags, $_;
+	    push @cxxflagsdbg, $_;
+	}
+
+	$x = `$pkgconfig --libs alsa`;
+	chomp($x);
+	@x = split(/ /,$x);
+	for(@x) {
+	    push @ldflags, $_;
+	}
+
+	print CONFIGH "#define HAVE_ALSA 1\n";
+    } else {
+	print "not found, ALSA support disabled.\n";
+	$alsa = 0;
+	print CONFIGH "#undef HAVE_ALSA\n";
+    }
+} else {
+    print CONFIGH "#undef HAVE_ALSA\n";
+}
+
 # dgtnix library
 
 #if ($dgt!=0) {
@@ -781,6 +822,8 @@ print "datafiles will be installed to    $dataprefix/$package\n";
 #if ($dgt==0) { print "no\n"; } else { print "yes\n"; }
 print "NLS support: ";
 if ($nls==0) { print "no\n"; } else { print "yes\n"; }
+print "ALSA support: ";
+if ($alsa==0) { print "no\n"; } else { print "yes\n"; }
 
 print "\ndone.\n";
 
