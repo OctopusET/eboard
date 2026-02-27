@@ -49,6 +49,10 @@
 #include "config.h"
 #include "eboard.h"
 
+#ifdef HAVE_ALSA
+#include <alsa/asoundlib.h>
+#endif
+
 SoundEvent::SoundEvent() {
   type=INT_WAVE;
   Pitch=800;
@@ -152,15 +156,23 @@ void SoundEvent::play() {
     fflush(stdout);
     return;
   }
-  
+
   if (!fork()) {
     if (type==INT_WAVE) {
+#ifdef HAVE_ALSA
+      alsaBeep();
+#else
       gstBeep();
+#endif
       _exit(0);
     }
 
     if (type==EXT_WAVE) {
+#ifdef HAVE_ALSA
+      alsaPlay(string(ExtraData));
+#else
       gstPlay(string(ExtraData));
+#endif
       _exit(0);
     }
 
@@ -606,3 +618,101 @@ MultiBeep::MultiBeep(int _samplerate, int _duration, int _pitch, int _count) {
 MultiBeep::~MultiBeep() {
   if (data!=NULL) free(data);
 }
+
+#ifdef HAVE_ALSA
+
+void SoundEvent::alsaBeep() {
+  snd_pcm_t *pcm;
+  int err;
+
+  err = snd_pcm_open(&pcm, "default", SND_PCM_STREAM_PLAYBACK, 0);
+  if (err < 0) return;
+
+  err = snd_pcm_set_params(pcm, SND_PCM_FORMAT_S16_LE,
+                           SND_PCM_ACCESS_RW_INTERLEAVED,
+                           1, 44100, 1, 100000);
+  if (err < 0) { snd_pcm_close(pcm); return; }
+
+  MultiBeep mb(44100, Duration, Pitch, Count);
+  if (mb.data == NULL) { snd_pcm_close(pcm); return; }
+
+  snd_pcm_sframes_t written = 0;
+  snd_pcm_sframes_t remaining = mb.samples;
+  while (remaining > 0) {
+    snd_pcm_sframes_t frames = snd_pcm_writei(pcm, mb.data + written, remaining);
+    if (frames < 0)
+      frames = snd_pcm_recover(pcm, frames, 0);
+    if (frames < 0) break;
+    written += frames;
+    remaining -= frames;
+  }
+
+  snd_pcm_drain(pcm);
+  snd_pcm_close(pcm);
+}
+
+void SoundEvent::alsaPlay(const string &_input) {
+  FILE *fp;
+  snd_pcm_t *pcm;
+  int err;
+  char header[44];
+  string input(_input);
+
+  if (input.empty()) return;
+  char tmp[512], *ptr;
+  ptr = realpath(input.c_str(), tmp);
+  if (ptr == NULL) return;
+  input = tmp;
+
+  fp = fopen(input.c_str(), "rb");
+  if (fp == NULL) return;
+
+  if (fread(header, 1, 44, fp) != 44) { fclose(fp); return; }
+
+  // verify RIFF WAV header
+  if (memcmp(header, "RIFF", 4) != 0 || memcmp(header + 8, "WAVE", 4) != 0) {
+    fclose(fp);
+    // not a WAV file, fall back to GStreamer
+    gstPlay(input);
+    return;
+  }
+
+  int channels = header[22] | (header[23] << 8);
+  int rate = header[24] | (header[25] << 8) | (header[26] << 16) | (header[27] << 24);
+  int bits = header[34] | (header[35] << 8);
+
+  snd_pcm_format_t fmt;
+  if (bits == 16) fmt = SND_PCM_FORMAT_S16_LE;
+  else if (bits == 8) fmt = SND_PCM_FORMAT_U8;
+  else { fclose(fp); gstPlay(input); return; }
+
+  err = snd_pcm_open(&pcm, "default", SND_PCM_STREAM_PLAYBACK, 0);
+  if (err < 0) { fclose(fp); return; }
+
+  err = snd_pcm_set_params(pcm, fmt, SND_PCM_ACCESS_RW_INTERLEAVED,
+                           channels, rate, 1, 100000);
+  if (err < 0) { snd_pcm_close(pcm); fclose(fp); return; }
+
+  int frame_size = channels * (bits / 8);
+  char buf[4096];
+  while (!feof(fp)) {
+    size_t n = fread(buf, 1, sizeof(buf), fp);
+    if (n == 0) break;
+    snd_pcm_sframes_t frames = n / frame_size;
+    snd_pcm_sframes_t written = 0;
+    while (written < frames) {
+      snd_pcm_sframes_t r = snd_pcm_writei(pcm, buf + written * frame_size,
+                                            frames - written);
+      if (r < 0) r = snd_pcm_recover(pcm, r, 0);
+      if (r < 0) goto done;
+      written += r;
+    }
+  }
+
+done:
+  snd_pcm_drain(pcm);
+  snd_pcm_close(pcm);
+  fclose(fp);
+}
+
+#endif /* HAVE_ALSA */
