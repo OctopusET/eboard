@@ -354,7 +354,9 @@ DirectConnection::DirectConnection(const char *hostname,int port) {
 
 int DirectConnection::open() {
   char z[128];
-  int i;
+  char portstr[16];
+  struct addrinfo hints, *res, *rp;
+  int rv;
 
   if (global.CommLog) {
     char ls[512];
@@ -364,41 +366,55 @@ int DirectConnection::open() {
 
   snprintf(z,128,_("Looking up host %s..."),HostName);
   global.status->setText(z,30);
-  
-  he=gethostbyname(HostName);
-  if (he==NULL) {
+
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+
+  snprintf(portstr, sizeof(portstr), "%d", Port);
+  rv = getaddrinfo(HostName, portstr, &hints, &res);
+  if (rv != 0) {
     snprintf(errorMessage,128,_("Host not found: %s"),HostName);
     return(-1);
   }
 
-  snprintf(HostAddress,96,"%d.%d.%d.%d",
-	   (guchar) he->h_addr_list[0][0],
-	   (guchar) he->h_addr_list[0][1],
-	   (guchar) he->h_addr_list[0][2],
-	   (guchar) he->h_addr_list[0][3]);
+  for (rp = res; rp != NULL; rp = rp->ai_next) {
+    if (rp->ai_family == AF_INET) {
+      char buf[INET_ADDRSTRLEN];
+      struct sockaddr_in *sin = (struct sockaddr_in *)rp->ai_addr;
+      inet_ntop(AF_INET, &sin->sin_addr, buf, sizeof(buf));
+      g_strlcpy(HostAddress, buf, 96);
+    } else if (rp->ai_family == AF_INET6) {
+      char buf[INET6_ADDRSTRLEN];
+      struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)rp->ai_addr;
+      inet_ntop(AF_INET6, &sin6->sin6_addr, buf, sizeof(buf));
+      g_strlcpy(HostAddress, buf, 96);
+    }
 
-  netsocket=socket(AF_INET,SOCK_STREAM,0);
+    netsocket = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+    if (netsocket < 0)
+      continue;
 
 #ifdef USE_SOCK_OPTS
-  int nagle=1;
-
-  #ifdef USE_SOL_TCP
-    setsockopt(netsocket,SOL_TCP,TCP_NODELAY,&nagle,sizeof(nagle));
-  #elif defined USE_IPPROTO_TCP
-    setsockopt(netsocket,IPPROTO_TCP,TCP_NODELAY,&nagle,sizeof(nagle));
-  #endif
+    int nagle=1;
+    #ifdef USE_SOL_TCP
+      setsockopt(netsocket,SOL_TCP,TCP_NODELAY,&nagle,sizeof(nagle));
+    #elif defined USE_IPPROTO_TCP
+      setsockopt(netsocket,IPPROTO_TCP,TCP_NODELAY,&nagle,sizeof(nagle));
+    #endif
 #endif
 
-  sa.sin_family=he->h_addrtype;
-  sa.sin_port=htons(Port);
-  memcpy(&sa.sin_addr,he->h_addr_list[0],he->h_length);
+    snprintf(z,128,_("Connecting to %s..."),HostAddress);
+    global.status->setText(z,30);
 
-  snprintf(z,128,_("Connecting to %s..."),HostAddress);
-  global.status->setText(z,30);
+    if (::connect(netsocket, rp->ai_addr, rp->ai_addrlen) == 0)
+      break;
 
-  i=::connect(netsocket,(struct sockaddr *)&sa,sizeof(sa));
+    ::close(netsocket);
+  }
 
-  if (i!=0) {
+  if (rp == NULL) {
+    freeaddrinfo(res);
     snprintf(z,128,_("Connection to %s:%d failed: "),HostName,Port);
     switch(errno) {
     case EBADF:        g_strlcat(z,_("Bad descriptor"),128);         break;
@@ -416,6 +432,8 @@ int DirectConnection::open() {
     g_strlcpy(errorMessage,z,128);
     return(-1);
   }
+
+  freeaddrinfo(res);
   Connected=1;
   fcntl(netsocket,F_SETFL,O_NONBLOCK);
   snprintf(z,128,_("Connected to %s (%s)"),HostName,HostAddress);

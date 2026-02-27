@@ -178,8 +178,6 @@ class DirectConnection : public BufferedConnection {
   int Connected;
   char errorMessage[128];
 
-  struct hostent *he;
-  struct sockaddr_in sa;
   int netsocket;
 };
 
