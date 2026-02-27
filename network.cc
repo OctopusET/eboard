@@ -537,8 +537,10 @@ int IncomingConnection::createSocket() {
 
   setsockopt(netsocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 
-  if (res->ai_family == AF_INET6)
-    setsockopt(netsocket, IPPROTO_IPV6, IPV6_V6ONLY, &(int){0}, sizeof(int));
+  if (res->ai_family == AF_INET6) {
+    int off = 0;
+    setsockopt(netsocket, IPPROTO_IPV6, IPV6_V6ONLY, &off, sizeof(off));
+  }
 
   if (bind(netsocket, res->ai_addr, res->ai_addrlen) == -1) {
     freeaddrinfo(res);
