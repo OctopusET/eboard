@@ -87,6 +87,11 @@ class SoundEvent {
   void gstPlay(const string &_input);
   void gstBeep();
 
+#ifdef HAVE_ALSA
+  void alsaBeep();
+  void alsaPlay(const string &_input);
+#endif
+
   char pvt[128];
 };
 
