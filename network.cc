@@ -737,7 +737,6 @@ void PipeConnection::checkChildren() {
   // 0 ok, -1 error, msg in getError
 int PipeConnection::open() {
   char z[256],firstline[256],*p;
-  struct hostent *he;
   int n2h[2], h2n[2];
 
   char *arguments[6];
@@ -766,29 +765,44 @@ int PipeConnection::open() {
       arguments[i]= (char *) args[i];
     break;
   case 1:
-    snprintf(z,256,_("Looking up host %s..."),HostName);
-    if (!Quiet)
-      global.status->setText(z,30);
-    he=gethostbyname(HostName);
-    if (he==NULL) {
-      snprintf(errorMessage,128,_("Host not found: %s"),HostName);
-      return(-1);
+    {
+      struct addrinfo hints, *res;
+      char portstr[16];
+      int rv;
+
+      snprintf(z,256,_("Looking up host %s..."),HostName);
+      if (!Quiet)
+        global.status->setText(z,30);
+
+      memset(&hints, 0, sizeof(hints));
+      hints.ai_family = AF_UNSPEC;
+      hints.ai_socktype = SOCK_STREAM;
+
+      snprintf(portstr, sizeof(portstr), "%d", Port);
+      rv = getaddrinfo(HostName, portstr, &hints, &res);
+      if (rv != 0) {
+        snprintf(errorMessage,128,_("Host not found: %s"),HostName);
+        return(-1);
+      }
+
+      if (res->ai_family == AF_INET) {
+        struct sockaddr_in *sin = (struct sockaddr_in *)res->ai_addr;
+        inet_ntop(AF_INET, &sin->sin_addr, HostAddress, 96);
+      } else {
+        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)res->ai_addr;
+        inet_ntop(AF_INET6, &sin6->sin6_addr, HostAddress, 96);
+      }
+      freeaddrinfo(res);
+
+      snprintf(z,256,_("Connecting to %s..."),HostAddress);
+      if (!Quiet)
+        global.status->setText(z,30);
+
+      snprintf(z,256,"%d",Port);
+      arguments[0]=HelperBin;
+      arguments[1]=HostAddress;
+      arguments[2]=z;
     }
-
-    snprintf(HostAddress,96,"%d.%d.%d.%d",
-	     (guchar) he->h_addr_list[0][0],
-	     (guchar) he->h_addr_list[0][1],
-	     (guchar) he->h_addr_list[0][2],
-	     (guchar) he->h_addr_list[0][3]);
-    
-    snprintf(z,256,_("Connecting to %s..."),HostAddress);
-    if (!Quiet)
-      global.status->setText(z,30);
-
-    snprintf(z,256,"%d",Port);
-    arguments[0]=HelperBin;
-    arguments[1]=HostAddress;
-    arguments[2]=z;
     break;
   }
 
