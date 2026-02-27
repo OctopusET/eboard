@@ -309,7 +309,7 @@ void TimeControl::toShortString(char *dest, int maxlen) {
   char z[64],y[64];
   switch(mode) {
   case TC_NONE:
-    snprintf(dest,maxlen,_("untimed")); // TRANSLATE
+    snprintf(dest,maxlen,"%s",_("untimed")); // TRANSLATE
     break;
   case TC_SPM:
     TimeControl::secondsToString(z,64,value[0],true);
@@ -329,7 +329,7 @@ void TimeControl::toString(char *dest, int maxlen) {
   char z[64],y[64];
   switch(mode) {
   case TC_NONE:
-    snprintf(dest,maxlen,_("no time control set"));
+    snprintf(dest,maxlen,"%s",_("no time control set"));
     break;
   case TC_SPM:
     TimeControl::secondsToString(z,64,value[0],true);
