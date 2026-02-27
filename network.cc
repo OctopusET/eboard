@@ -506,42 +506,65 @@ int IncomingConnection::open() {
 }
 
 int IncomingConnection::createSocket() {
-  struct sockaddr_in sin;
+  struct addrinfo hints, *res;
+  char portstr[16];
+  int rv, on = 1;
 
-  netsocket = socket(AF_INET, SOCK_STREAM, 0);
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_INET6;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = AI_PASSIVE | AI_V4MAPPED;
+
+  snprintf(portstr, sizeof(portstr), "%d", Port);
+  rv = getaddrinfo(NULL, portstr, &hints, &res);
+  if (rv != 0) {
+    // fall back to IPv4 if IPv6 is not available
+    hints.ai_family = AF_INET;
+    hints.ai_flags = AI_PASSIVE;
+    rv = getaddrinfo(NULL, portstr, &hints, &res);
+    if (rv != 0) {
+      g_strlcpy(errorMessage,_("Unable to create socket."),128);
+      return -1;
+    }
+  }
+
+  netsocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
   if (netsocket == -1) {
+    freeaddrinfo(res);
     g_strlcpy(errorMessage,_("Unable to create socket."),128);
     return -1;
   }
 
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = INADDR_ANY;
-  sin.sin_port = htons(Port);
-    
-  if (bind(netsocket,(struct sockaddr *) &sin,sizeof(sin))==-1) {
+  setsockopt(netsocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+
+  if (res->ai_family == AF_INET6)
+    setsockopt(netsocket, IPPROTO_IPV6, IPV6_V6ONLY, &(int){0}, sizeof(int));
+
+  if (bind(netsocket, res->ai_addr, res->ai_addrlen) == -1) {
+    freeaddrinfo(res);
     snprintf(errorMessage,128,_("Unable to bind on port %d."),Port);
     return(-1);
   }
-  
+
+  freeaddrinfo(res);
   fcntl(netsocket,F_SETFL,O_NONBLOCK);
   if (listen(netsocket, 1)!=0) {
     snprintf(errorMessage,128,"Unable to listen on port %d.",Port);
     return(-1);
   }
   return 0;
-
 }
 
 int IncomingConnection::acceptConnection() {
   int       sock;
   socklen_t addrlen;
-  struct    sockaddr_in pin;
+  struct    sockaddr_storage pin;
+  char      addrbuf[INET6_ADDRSTRLEN];
   char z[128];
 
-  addrlen = (socklen_t) sizeof(struct sockaddr_in);
+  addrlen = (socklen_t) sizeof(pin);
   sock = accept(netsocket, (struct sockaddr *) &pin, &addrlen);
-  
+
   if (sock == -1) {
     switch(errno) {
     case EAGAIN: strcpy(errorMessage,"Nobody called."); break;
@@ -550,7 +573,15 @@ int IncomingConnection::acceptConnection() {
     return -1;
   }
 
-  g_strlcpy(HostName, inet_ntoa(pin.sin_addr),128);
+  if (pin.ss_family == AF_INET) {
+    struct sockaddr_in *sin = (struct sockaddr_in *)&pin;
+    inet_ntop(AF_INET, &sin->sin_addr, addrbuf, sizeof(addrbuf));
+  } else {
+    struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)&pin;
+    inet_ntop(AF_INET6, &sin6->sin6_addr, addrbuf, sizeof(addrbuf));
+  }
+
+  g_strlcpy(HostName, addrbuf, 128);
   strcpy(HostAddress, HostName);
 
   ::close(netsocket); /* kill the listening socket */
